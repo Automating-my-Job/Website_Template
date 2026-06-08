@@ -1,0 +1,190 @@
+/* ===================================================================
+   Global stylesheet — Tailwind directives + layered custom CSS.
+
+   Layers (in cascade order):
+     base       — shadcn HSL design tokens (:root), element resets, smooth
+                  scroll, font smoothing, focus-visible ring, custom
+                  scrollbar, and ::selection styling.
+     components — reusable class primitives: .eyebrow, .btn-primary /
+                  .btn-ghost, .glass-nav, .card-bento / .card-feature,
+                  .dot-grid, .text-gradient.
+     utilities  — .animate-marquee (+ hover-pause helper).
+     keyframes  — `marquee` (the only hand-written keyframe; the rest live
+                  in the Tailwind config).
+
+   GOTCHA — .card-bento / .card-feature deliberately transition ONLY
+   box-shadow/border-color, NOT transform/opacity. framer-motion owns the
+   scroll-entrance transform/opacity animations; a `transition: all` here
+   would fight it and cause flicker.
+
+   ACCESSIBILITY — reduced-motion is honored via framer-motion's
+   MotionProvider (JS), not a CSS @media block, so it is intentionally
+   absent from this file.
+   =================================================================== */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── shadcn CSS variable tokens (light mode, HSL channel values) ─── */
+@layer base {
+  :root {
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 220 91% 54%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 214 32% 91%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 214 32% 95%;
+    --muted-foreground: 215 16% 47%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 220 91% 54%;
+    --radius: 0.75rem;
+  }
+
+  *,
+  *::before,
+  *::after {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply min-h-screen bg-surface font-sans text-ink antialiased;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-accent ring-offset-2 ring-offset-white;
+  }
+
+  ::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-surface-100;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-edge-strong;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-accent;
+  }
+
+  ::selection {
+    @apply bg-accent/[0.12] text-accent-700;
+  }
+}
+
+/* ─── Component classes ─── */
+@layer components {
+  /* Pill-shaped eyebrow label — Pacific Blue */
+  .eyebrow {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-accent/20
+           bg-accent-light px-3 py-1 font-mono text-[0.6875rem] uppercase
+           tracking-[0.18em] text-accent;
+  }
+
+  /* Primary CTA button */
+  .btn-primary {
+    @apply inline-flex items-center gap-2 rounded-lg bg-accent px-6 py-3 text-sm
+           font-medium text-white no-underline transition-all duration-150
+           hover:bg-accent-600 hover:-translate-y-px
+           active:translate-y-0
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent
+           focus-visible:ring-offset-2 focus-visible:ring-offset-white;
+    box-shadow:
+      0 0 0 1px rgba(37, 99, 235, 0.3),
+      0 8px 30px -8px rgba(37, 99, 235, 0.4);
+  }
+
+  /* Ghost CTA button */
+  .btn-ghost {
+    @apply inline-flex items-center gap-2 rounded-lg border border-edge px-6 py-3
+           text-sm font-medium text-ink-secondary no-underline transition-all duration-150
+           hover:border-edge-strong hover:text-ink hover:-translate-y-px
+           active:translate-y-0
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent
+           focus-visible:ring-offset-2 focus-visible:ring-offset-white;
+  }
+
+  /* Glass navbar surface */
+  .glass-nav {
+    @apply bg-white/80 backdrop-blur-xl border-b border-edge/60;
+    box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.8), 0 4px 24px rgba(0, 0, 0, 0.06);
+  }
+
+  /* Standard bento card */
+  .card-bento {
+    @apply relative overflow-hidden rounded-cardLg bg-white border border-edge p-6;
+    /* Transition ONLY hover props — NOT transform/opacity. framer-motion drives
+       those on scroll-entrance; transition-all would fight it and cause a flicker. */
+    transition: box-shadow 200ms ease, border-color 200ms ease;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+  }
+  .card-bento:hover {
+    @apply border-edge-strong -translate-y-0.5;
+    box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Feature bento card — blue accent border + glow */
+  .card-feature {
+    @apply relative overflow-hidden rounded-cardLg bg-accent-light p-6;
+    border: 1px solid rgba(37, 99, 235, 0.18);
+    /* Same as .card-bento: don't CSS-transition transform/opacity (framer owns them). */
+    transition: box-shadow 200ms ease;
+    box-shadow:
+      0 0 0 1px rgba(37, 99, 235, 0.06),
+      0 8px 40px -12px rgba(37, 99, 235, 0.12);
+  }
+  .card-feature:hover {
+    box-shadow:
+      0 0 0 1px rgba(37, 99, 235, 0.2),
+      0 20px 50px -12px rgba(37, 99, 235, 0.18);
+  }
+
+  /* Dot-grid backdrop for hero and section backgrounds */
+  .dot-grid {
+    background-image: radial-gradient(rgba(15, 23, 42, 0.065) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  /* Blue gradient text */
+  .text-gradient {
+    background: linear-gradient(135deg, #2563eb 0%, #3b82f6 50%, #60a5fa 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
+
+/* ─── Custom utilities ─── */
+@layer utilities {
+  /* Marquee — applied to the scrolling logo track */
+  .animate-marquee {
+    animation: marquee 28s linear infinite;
+  }
+
+  /* Pause child marquee on hover */
+  .animate-marquee-pause:hover .animate-marquee {
+    animation-play-state: paused;
+  }
+}
+
+/* ─── Keyframes (marquee is the only custom one; others come from Tailwind config) ─── */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(calc(-100% / 6)); }
+}
